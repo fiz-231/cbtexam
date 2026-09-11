@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>경영학부 졸업시험 CBT</title>
+  <style>
+    :root {
+      --primary-color: #1e3a8a;
+      --secondary-color: #3b82f6;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+      --correct-color: #16a34a;
+      --wrong-color: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    header { background-color: var(--primary-color); color: white; padding: 20px 0; text-align: center; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    
+    .card { background: var(--card-bg); border-radius: 8px; padding: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); margin-bottom: 20px; }
+    
+    /* 과목 선택 & 옵션 화면 */
+    .setup-group { margin-bottom: 20px; }
+    .setup-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+    .setup-group select, .setup-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; }
+    
+    /* 문제 풀이 화면 */
+    .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+    .subject-badge { background: var(--secondary-color); color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+    
+    .question-text { font-size: 18px; font-weight: 600; margin-bottom: 20px; white-space: pre-wrap; }
+    
+    .options-container { display: flex; flex-direction: column; gap: 12px; }
+    .option-btn { background: #fff; border: 1px solid var(--border-color); padding: 14px 18px; border-radius: 6px; text-align: left; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+    .option-btn:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+    .option-btn.selected { border-color: var(--secondary-color); background-color: #eff6ff; font-weight: bold; }
+    .option-btn.correct { background-color: #dcfce7; border-color: var(--correct-color); color: #14532d; font-weight: bold; }
+    .option-btn.wrong { background-color: #fee2e2; border-color: var(--wrong-color); color: #7f1d1d; }
+
+    .explanation { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-left: 4px solid var(--secondary-color); border-radius: 4px; display: none; }
+
+    .btn-group { display: flex; justify-content: space-between; margin-top: 30px; }
+    .btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-primary { background-color: var(--primary-color); color: white; }
+    .btn-primary:hover { background-color: #1e40af; }
+    .btn-secondary { background-color: #64748b; color: white; }
+    .btn-secondary:hover { background-color: #475569; }
+
+    /* 결과 화면 */
+    .score-box { text-align: center; padding: 20px 0; }
+    .score-box h2 { font-size: 36px; color: var(--primary-color); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>경영학부 졸업시험 연습 시스템</h1>
+    </header>
+
+    <!-- 1. 설정 화면 -->
+    <div id="setup-card" class="card">
+      <h2>시험 설정</h2>
+      <br>
+      <div class="setup-group">
+        <label for="subject-select">과목 선택</label>
+        <select id="subject-select">
+          <option value="ALL">전체 과목 (280문항)</option>
+          <option value="Accounting">Accounting (회계학)</option>
+          <option value="Financial Management">Financial Management (재무관리)</option>
+          <option value="Marketing">Marketing (마케팅)</option>
+          <option value="Management Information System">Management Information System (경영정보시스템)</option>
+          <option value="Management Science">Management Science (경영과학)</option>
+          <option value="Strategic Management">Strategic Management (전략경영)</option>
+          <option value="Organizational Behavior">Organizational Behavior (조직행동론)</option>
+        </select>
+      </div>
+
+      <div class="setup-group">
+        <label for="mode-select">풀이 모드</label>
+        <select id="mode-select">
+          <option value="practice">연습 모드 (즉시 정답 확인)</option>
+          <option value="exam">실전 모드 (최종 성적 산출)</option>
+        </select>
+      </div>
+
+      <div class="setup-group">
+        <label for="shuffle-check">
+          <input type="checkbox" id="shuffle-check" style="width: auto;"> 문제 순서 섞기
+        </label>
+      </div>
+
+      <button id="start-btn" class="btn btn-primary" style="width: 100%; margin-top: 10px;">시험 시작하기</button>
+    </div>
+
+    <!-- 2. 문제 풀이 화면 -->
+    <div id="quiz-card" class="card hidden">
+      <div class="quiz-header">
+        <span id="subject-badge" class="subject-badge">과목명</span>
+        <div><span id="current-num">1</span> / <span id="total-num">20</span></div>
+      </div>
+
+      <div id="question-text" class="question-text">문제가 여기에 표시됩니다.</div>
+      <div id="options-container" class="options-container"></div>
+
+      <div id="explanation-box" class="explanation">
+        <div id="explanation-text"></div>
+      </div>
+
+      <div class="btn-group">
+        <button id="prev-btn" class="btn btn-secondary">이전 문제</button>
+        <button id="next-btn" class="btn btn-primary">다음 문제</button>
+        <button id="submit-btn" class="btn btn-primary hidden">제출하기</button>
+      </div>
+    </div>
+
+    <!-- 3. 결과 화면 -->
+    <div id="result-card" class="card hidden">
+      <h2>시험 결과</h2>
+      <div class="score-box">
+        <p>최종 점수</p>
+        <h2 id="final-score">0 / 0</h2>
+        <p id="score-percentage" style="margin-top: 10px; font-size: 18px; font-weight: bold;"></p>
+      </div>
+      <button id="restart-btn" class="btn btn-primary" style="width: 100%;">다시 풀기</button>
+    </div>
+  </div>
+
+  <!-- 외부 questions.js 로드 -->
+  <script src="questions.js"></script>
+
+  <script>
+    // 상태 변수
+    let activeQuestions = [];
+    let currentIndex = 0;
+    let userAnswers = {};
+    let isExamMode = false;
+
+    // DOM 요소
+    const setupCard = document.getElementById('setup-card');
+    const quizCard = document.getElementById('quiz-card');
+    const resultCard = document.getElementById('result-card');
+
+    const subjectSelect = document.getElementById('subject-select');
+    const modeSelect = document.getElementById('mode-select');
+    const shuffleCheck = document.getElementById('shuffle-check');
+    const startBtn = document.getElementById('start-btn');
+
+    const subjectBadge = document.getElementById('subject-badge');
+    const currentNum = document.getElementById('current-num');
+    const totalNum = document.getElementById('total-num');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const explanationBox = document.getElementById('explanation-box');
+    const explanationText = document.getElementById('explanation-text');
+
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // 이벤트 리스너
+    startBtn.addEventListener('click', startQuiz);
+    prevBtn.addEventListener('click', () => navigateQuestion(-1));
+    nextBtn.addEventListener('click', () => navigateQuestion(1));
+    submitBtn.addEventListener('click', finishQuiz);
+    restartBtn.addEventListener('click', resetQuiz);
+
+    function startQuiz() {
+      const selectedSubject = subjectSelect.value;
+      isExamMode = modeSelect.value === 'exam';
+
+      // 과목 필터링
+      if (selectedSubject === 'ALL') {
+        activeQuestions = [...questions];
+      } else {
+        activeQuestions = questions.filter(q => q.subject === selectedSubject);
+      }
+
+      if (activeQuestions.length === 0) {
+        alert('해당 과목의 문제가 없습니다.');
+        return;
+      }
+
+      // 셔플 여부
+      if (shuffleCheck.checked) {
+        activeQuestions.sort(() => Math.random() - 0.5);
+      }
+
+      currentIndex = 0;
+      userAnswers = {};
+
+      setupCard.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      quizCard.classList.remove('hidden');
+
+      totalNum.textContent = activeQuestions.length;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = activeQuestions[currentIndex];
+      
+      subjectBadge.textContent = q.subject;
+      currentNum.textContent = currentIndex + 1;
+      questionText.textContent = q.question;
+      
+      optionsContainer.innerHTML = '';
+      explanationBox.style.display = 'none';
+
+      const selectedOptIndex = userAnswers[currentIndex];
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt.text;
+
+        if (selectedOptIndex !== undefined) {
+          if (isExamMode) {
+            // 실전 모드: 선택한 것만 표시
+            if (selectedOptIndex === idx) btn.classList.add('selected');
+          } else {
+            // 연습 모드: 정답/오답 즉시 표시
+            if (opt.isCorrect) btn.classList.add('correct');
+            if (selectedOptIndex === idx && !opt.isCorrect) btn.classList.add('wrong');
+          }
+        }
+
+        btn.addEventListener('click', () => selectOption(idx));
+        optionsContainer.appendChild(btn);
+      });
+
+      // 연습 모드에서 이미 답을 선택했다면 해설 표시
+      if (!isExamMode && selectedOptIndex !== undefined) {
+        explanationText.textContent = q.explanation;
+        explanationBox.style.display = 'block';
+      }
+
+      // 이전/다음 버튼 제어
+      prevBtn.disabled = currentIndex === 0;
+      
+      if (currentIndex === activeQuestions.length - 1) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+      }
+    }
+
+    function selectOption(index) {
+      userAnswers[currentIndex] = index;
+      renderQuestion();
+    }
+
+    function navigateQuestion(step) {
+      currentIndex += step;
+      renderQuestion();
+    }
+
+    function finishQuiz() {
+      let correctCount = 0;
+
+      activeQuestions.forEach((q, idx) => {
+        const selectedOptIndex = userAnswers[idx];
+        if (selectedOptIndex !== undefined && q.options[selectedOptIndex].isCorrect) {
+          correctCount++;
+        }
+      });
+
+      quizCard.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+
+      const total = activeQuestions.length;
+      const percentage = Math.round((correctCount / total) * 100);
+
+      document.getElementById('final-score').textContent = `${correctCount} / ${total}`;
+      document.getElementById('score-percentage').textContent = `정답률: ${percentage}%`;
+    }
+
+    function resetQuiz() {
+      resultCard.classList.add('hidden');
+      setupCard.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
